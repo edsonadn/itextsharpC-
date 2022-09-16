@@ -1,0 +1,43 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Net.Http;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using System.IO;
+using System.Dynamic;
+using proyectoAsync.Reportes;
+
+namespace proyectoAsync
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            imprimir();
+        }
+        static async void imprimir()
+        { 
+            // esta es variable tipo task que nos permite ejecutar todo lo que esta adentro en otro hilo
+            var age = new Task(() =>
+            {
+                Thread.Sleep(1000);
+                Console.WriteLine("hello");
+            });
+
+            //los asincronismos se les debe de decir cuando se deben de ejecutar con esta linea 
+            age.Start();
+
+            Console.WriteLine("este es despues del task");
+            await age; // esta linea sirve para esperar hasta que se termine de ejecutar el asincronismo
+        }
+        
+       
+        
+    }
+
+   
+}

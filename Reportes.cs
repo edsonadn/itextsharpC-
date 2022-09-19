@@ -11,6 +11,10 @@ using System.Dynamic;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.CompilerServices;
 using Org.BouncyCastle.Asn1.Cmp;
+using Org.BouncyCastle.Asn1.X509;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 
 namespace proyectoAsync.Reportes
 {
@@ -24,20 +28,36 @@ namespace proyectoAsync.Reportes
         private int MarginDocumentRigth = 15;
         private int MarginDocumentBottom = 20;
 
-        public Reporte()
+        public Reporte(int indicateReport, string[][] value)
         {
-            Document doc = new Document(PageSize.LETTER.Rotate(),MarginDocumentLeft, MarginDocumentRigth, MarginDocumentTop, MarginDocumentBottom);
+            switch (indicateReport)
+            {
+                case 1://reporte de produccion Barniz
+                    CreateReportProduccionBarniz();
+                    break;
+                case 2://reporte de control de proceso
+                    CreateReportControlProcess(value);
+                    break;
+                default:
+                    throw new ArgumentException("value default does not exist");
+            }
+        }
+        //FUNCTION CREATE
+        private void CreateReportProduccionBarniz()
+        {
+            //sup
+            Document doc = new Document(PageSize.LETTER.Rotate(), MarginDocumentLeft, MarginDocumentRigth, MarginDocumentTop, MarginDocumentBottom);
             PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream(@"C:\Users\edson\Desktop\prueba.pdf", FileMode.Create));
 
             doc.AddTitle("Mi primer PDF");
             doc.AddCreator("Edson Dimas");
             doc.Open();
 
-            doc.Add(CreateTableTitle("REPORTE DE PRODUCCION DE BARNIZ U.V",30));
+            doc.Add(CreateTableTitle("REPORTE DE PRODUCCION DE BARNIZ U.V", 30));
 
             doc.Add(CreateSpaceWhite(0));
 
-            doc.Add(CreateTable1("NUMERO DE O.I","2207012","PROYECTO","cajilla 12 packs","FECHA","14-jul-22"));
+            doc.Add(CreateTable1("NUMERO DE O.I", "2207012", "PROYECTO", "cajilla 12 packs", "FECHA", "14-jul-22"));
 
             doc.Add(CreateSpaceWhite(0));
 
@@ -53,6 +73,87 @@ namespace proyectoAsync.Reportes
             doc.Close();
             writer.Close();
         }
+        private void CreateReportControlProcess(string[][] value)
+        {
+            Document doc = new Document(PageSize.LETTER.Rotate(), MarginDocumentLeft, MarginDocumentRigth, MarginDocumentTop, MarginDocumentBottom);
+            PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream(@"C:\Users\edson\Desktop\prueba.pdf", FileMode.Create));
+            Image image = Image.GetInstance(@"Picture\image.jpg");
+
+            //image1.ScalePercent(50f);
+            image.ScaleAbsoluteWidth(150);
+            image.ScaleAbsoluteHeight(35);
+
+            doc.AddTitle("Mi primer PDF");
+            doc.AddCreator("Edson Dimas");
+            doc.Open();
+
+            doc.Add(CreateTableControlProcessTitle(
+                image,
+                "CONTROL EN PROCESO BARNIZ U.V",
+                "CODIGO:ROP-11-01",_NFont));
+            doc.Add(CreateTableControlProcess(
+                "FECHA",
+                "ORDEN DE IMPRESION",
+                "NOMBRE DEL TRABAJO",
+                "PRUEBA DE FROTE",
+                "PRUEBA DE DOBLEZ",
+                "CURADO DE BARNIZ",
+                "POLVO",
+                "REPINTE",
+                "MATERIAL FRESCO",
+                "OBSERVACIONES",_standardFont));
+            for(int i = 0; i < value.Length; i++)
+            {
+                doc.Add(CreateTableControlProcess(
+                    value[i][0], 
+                    value[i][1], 
+                    value[i][2], 
+                    value[i][3], 
+                    value[i][4], 
+                    value[i][5], 
+                    value[i][6], 
+                    value[i][7], 
+                    value[i][8],
+                    value[i][9],
+                    _standardFont));
+            }
+            doc.Add(CreateTableControlProcessLeyend("C:CUMPLE","NC:NO CUMPLE","N/A:NO APLICA",_NFont));
+            doc.Add(new Phrase("NOTA: ESTE CONTROL EN PROCESO DEBE DE REALIZARSE CADA 300 HOJAS PROCESADAS SIN IMPORTAR LA CANTIDAD DE PEDIDO", _NFont));
+            
+            doc.Close();
+            writer.Close();
+        }
+        private void CreateReportBitacora(string[][] value)
+        {
+            Document doc = new Document(PageSize.LETTER.Rotate(), MarginDocumentLeft, MarginDocumentRigth, MarginDocumentTop, MarginDocumentBottom);
+            PdfWriter writer = PdfWriter.GetInstance(doc, new FileStream(@"C:\Users\edson\Desktop\prueba.pdf", FileMode.Create));
+            Image image = Image.GetInstance(@"Picture\image.jpg");
+
+            //image1.ScalePercent(50f);
+            image.ScaleAbsoluteWidth(150);
+            image.ScaleAbsoluteHeight(35);
+
+            doc.AddTitle("Mi primer PDF");
+            doc.AddCreator("Edson Dimas");
+
+            for(int i = 0; i < value.Length; i++)
+            {
+                doc.Add(CreateTableReportBitacora(
+                    value[i][0],
+                    value[i][1],
+                    value[i][2],
+                    value[i][3],
+                    value[i][4],
+                    value[i][5],
+                    _NFont,
+                    _standardFont));
+            }
+
+            doc.Open();
+            doc.Close();
+            writer.Close();
+        }
+        //FUNCTION DRAW
         private PdfPTable CreateSpaceWhite(int space)
         {
             PdfPTable SpaceTable = new PdfPTable(1);
@@ -91,7 +192,7 @@ namespace proyectoAsync.Reportes
 
             return TableTitle;
         }
-        private PdfPTable CreateTable1(String Option1,String Value1,String Option2,String Value2,String Option3,String Value3)
+        private PdfPTable CreateTable1(String Option1, string Value1,String Option2,String Value2,String Option3,String Value3)
         {
             float[] widths = new float[] { 4f, 7f,4f,7f,4f,7f };
             PdfPTable table = new PdfPTable(6);
@@ -193,5 +294,187 @@ namespace proyectoAsync.Reportes
 
             return table;
         }
+        private PdfPTable CreateTableControlProcessTitle(Image a1, string a2, string a3, Font _font )
+        {
+            float[] widths = new float[] { 9, 12, 6 };
+            PdfPTable table = new PdfPTable(3);
+            table.WidthPercentage = 100;
+            table.SetWidths(widths);
+
+            PdfPCell pdfPCell1 = new PdfPCell(a1);
+            pdfPCell1.BorderWidth = 0.75f;
+            pdfPCell1.Padding = 0;
+            pdfPCell1.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell2 = new PdfPCell(new Phrase(a2, _font));
+            pdfPCell2.BorderWidth = 0.75f;
+            pdfPCell2.Padding = 10;
+            pdfPCell2.VerticalAlignment = Element.ALIGN_CENTER;
+            pdfPCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell3 = new PdfPCell(new Phrase(a3, _font));
+            pdfPCell3.BorderWidth = 0.75f;
+            pdfPCell3.Padding = 10;
+            pdfPCell3.VerticalAlignment = Element.ALIGN_CENTER;
+            pdfPCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+
+            table.AddCell(pdfPCell1);
+            table.AddCell(pdfPCell2);
+            table.AddCell(pdfPCell3);
+
+            return table;
+        }
+        private PdfPTable CreateTableControlProcess(string a1,string a2,string a3,string a4, string a5, string a6, string a7,string a8,string a9,string a10,Font _font)
+        {
+            int pading = 5;
+            float[] widht = new float[] {2,2,5,2,2,2,2,2,2,6 };
+            PdfPTable table = new PdfPTable(10);
+            table.WidthPercentage = 100;
+            table.SetWidths(widht);
+            
+
+            PdfPCell pdfPCell1 = new PdfPCell(new Phrase(a1,_font));
+            pdfPCell1.BorderWidth = 0.75f;
+            pdfPCell1.PaddingBottom = pading;
+            pdfPCell1.PaddingTop = pading;
+
+            pdfPCell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell1.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell2 = new PdfPCell(new Phrase(a2, _font));
+            pdfPCell2.BorderWidth = 0.75f;
+            pdfPCell2.Padding = pading;
+            pdfPCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell2.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell3 = new PdfPCell(new Phrase(a3, _font));
+            pdfPCell3.BorderWidth = 0.75f;
+            pdfPCell3.Padding = pading;
+            pdfPCell3.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell3.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell4 = new PdfPCell(new Phrase(a4,_font));
+            pdfPCell4.BorderWidth = 0.75f;
+            pdfPCell4.Padding = pading;
+            pdfPCell4.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell4.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell5 = new PdfPCell(new Phrase(a5, _font));
+            pdfPCell5.BorderWidth = 0.75f;
+            pdfPCell5.Padding = pading;
+            pdfPCell5.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell5.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell6 = new PdfPCell(new Phrase(a6, _font));
+            pdfPCell6.BorderWidth = 0.75f;
+            pdfPCell6.Padding = pading;
+            pdfPCell6.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell6.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell7 = new PdfPCell(new Phrase(a7, _font));
+            pdfPCell7.BorderWidth = 0.75f;
+            pdfPCell7.Padding = pading;
+            pdfPCell7.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell7.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell8 = new PdfPCell(new Phrase(a8, _font));
+            pdfPCell8.BorderWidth = 0.75f;
+            pdfPCell8.Padding = pading;
+            pdfPCell8.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell8.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell9 = new PdfPCell(new Phrase(a9, _font));
+            pdfPCell9.BorderWidth = 0.75f;
+            pdfPCell9.Padding = pading;
+            pdfPCell9.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell9.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell10 = new PdfPCell(new Phrase(a10, _font)); 
+            pdfPCell10.BorderWidth = 0.75f;
+            pdfPCell10.Padding = pading;
+            pdfPCell10.VerticalAlignment = Element.ALIGN_CENTER;
+
+            table.AddCell(pdfPCell1);
+            table.AddCell(pdfPCell2);
+            table.AddCell(pdfPCell3);
+            table.AddCell(pdfPCell4);
+            table.AddCell(pdfPCell5);
+            table.AddCell(pdfPCell6);
+            table.AddCell(pdfPCell7);
+            table.AddCell(pdfPCell8);
+            table.AddCell(pdfPCell9);
+            table.AddCell(pdfPCell10);
+
+            return table;
+        }
+        private PdfPTable CreateTableControlProcessLeyend(String a1,String a2,string a3, Font _font)
+        {
+            float[] Widths = new float[] {2,2,2,7}; 
+            PdfPTable table = new PdfPTable(4);
+            table.WidthPercentage = 100;
+            table.SetWidths(Widths);
+
+            PdfPCell pdfPCell1 = new PdfPCell(new Phrase(a1, _font));
+            pdfPCell1.BorderWidth = 0;
+            pdfPCell1.Padding = 5;
+            pdfPCell1.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell2 = new PdfPCell(new Phrase(a2, _font));
+            pdfPCell2.BorderWidth = 0;
+            pdfPCell2.Padding = 5;
+            pdfPCell2.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell3 = new PdfPCell(new Phrase(a3, _font));
+            pdfPCell3.BorderWidth = 0;
+            pdfPCell3.Padding = 5;
+            pdfPCell3.VerticalAlignment = Element.ALIGN_CENTER;
+            PdfPCell pdfPCell4 = new PdfPCell(new Phrase("", _font));
+            pdfPCell4.BorderWidth = 0;
+            pdfPCell4.Padding = 5;
+            pdfPCell4.VerticalAlignment = Element.ALIGN_CENTER;
+
+            table.AddCell(pdfPCell1);
+            table.AddCell(pdfPCell2);
+            table.AddCell(pdfPCell3);
+            table.AddCell(pdfPCell4);
+            return table;
+        }
+        private PdfPTable CreateTableReportBitacoraTitle(string a1,string a2,Font font)
+        {
+            int padding = 5;
+            float[] widths = new float[] { 3, 5 };
+            PdfPTable table = new PdfPTable(2);
+            table.WidthPercentage = 100;
+            table.SetWidths(widths);
+
+            PdfPCell pdfPCell1 = new PdfPCell(new Phrase(a1,font));
+            pdfPCell1.BackgroundColor = BaseColor.GRAY;
+            pdfPCell1.HorizontalAlignment = Element.ALIGN_CENTER;
+            pdfPCell1.VerticalAlignment = Element.ALIGN_CENTER;
+            pdfPCell1.PaddingBottom = padding;
+            pdfPCell1.PaddingTop = padding;
+
+            PdfPCell pdfPCell2 = new PdfPCell(new Phrase(a2,font));
+            pdfPCell2.BackgroundColor = BaseColor.GRAY;
+            pdfPCell1.VerticalAlignment = Element.ALIGN_CENTER;
+            pdfPCell2.HorizontalAlignment = Element.ALIGN_CENTER;
+
+            table.AddCell(pdfPCell1);
+            table.AddCell(pdfPCell2);
+
+            return table; 
+        }
+        private PdfPTable CreateTableReportBitacora(string t1, string a1,string t2,string a2,string t3,string a3,Font title,Font text)
+        {
+            int padding = 3;
+            float[] Widths = new float[] {2,3,2,3,2,3};  
+            PdfPTable table = new PdfPTable(6);
+            table.WidthPercentage = 100;
+            table.SetWidths(Widths);
+
+            PdfPCell pdfPCell1 = new PdfPCell(new Phrase(t1,title));
+            pdfPCell1.BorderWidth = 0.75f;
+            pdfPCell1.PaddingBottom = padding;
+            pdfPCell1.PaddingTop = padding;
+            PdfPCell pdfPCell2 = new PdfPCell(new Phrase(a1,text));
+            pdfPCell2.BorderWidth = 0.75f;
+            PdfPCell pdfPCell3 = new PdfPCell(new Phrase(t2,title));
+            pdfPCell3.BorderWidth = 0.75f;
+            PdfPCell pdfPCell4 = new PdfPCell(new Phrase(a2,text));
+            pdfPCell4.BorderWidth = 0.75f;
+            PdfPCell pdfPCell5 = new PdfPCell(new Phrase(t3,title));
+            pdfPCell5.BorderWidth = 0.75f;
+            PdfPCell pdfPCell6 = new PdfPCell(new Phrase(a3,text));
+            pdfPCell6.BorderWidth = 0.75f;
+            return table;
+        }
     }
 }
+
